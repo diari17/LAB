@@ -1,0 +1,22 @@
+<h2>Modifier l'abonné</h2>
+
+<form action="/subscribers/<%= formData._id %>?_method=PUT" method="POST">
+    <input type="hidden" name="_method" value="PUT">
+    <div class="form-group">
+        <label for="name">Nom complet</label>
+        <input type="text" class="form-control" id="name" name="name" 
+               value="<%= formData.name %>" required>
+    </div>
+    <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" class="form-control" id="email" name="email" 
+               value="<%= formData.email %>" required>
+    </div>
+    <div class="form-group">
+        <label for="zipCode">Code Postal</label>
+        <input type="text" class="form-control" id="zipCode" name="zipCode" 
+               value="<%= formData.zipCode %>" pattern="\d{5}" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Mettre à jour</button>
+    <a href="/subscribers" class="btn btn-secondary">Annuler</a>
+</form>
