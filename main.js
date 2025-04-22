@@ -2,6 +2,12 @@ const express = require("express");
 const session = require('express-session');
 const flash = require('connect-flash');
 const mongoose = require("mongoose"); // Ajout de Mongoose
+// Ajouter le middleware method-override
+const methodOverride = require("method-override");
+const passport = require("passport");
+const cookieParser = require("cookie-parser");
+
+
 const layouts = require("express-ejs-layouts");
 const homeController = require("./controllers/homeController");
 const errorController = require("./controllers/errorController");
@@ -10,8 +16,8 @@ const subscribersController = require("./controllers/subscribersController");
 // Ajoutez les contrôleurs
 const usersController = require("./controllers/usersController");
 const coursesController = require("./controllers/coursesController");
-// Ajouter le middleware method-override
-const methodOverride = require("method-override");
+
+const authController = require("./controllers/authController");
 
 
 // Configuration de la connexion à MongoDB
@@ -46,8 +52,48 @@ app.use(session({
     cookie: { secure: false } 
 }));
 
-// Initialisation de connect-flash (après session)
+// // Initialisation de connect-flash (après session)
+// app.use(flash());
+// const app = express();
+// Configuration de l'application
+app.set("port", process.env.PORT || 3000);
+app.set("view engine", "ejs");
+app.use(express.static("public"));
+app.use(layouts);
+app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
+app.use(methodOverride("_method", {
+methods: ["POST", "GET"]
+}));
+// Configuration des cookies et des sessions
+app.use(cookieParser("secret_passcode"));
+app.use(session({
+secret: "secret_passcode",
+cookie: {
+maxAge: 4000000
+},
+resave: false,
+saveUninitialized: false
+}));
+// Configuration de flash messages
 app.use(flash());
+// Configuration de Passport
+app.use(passport.initialize());
+app.use(passport.session());
+// Configuration du User model pour Passport
+const User = require("./models/user");
+passport.use(User.createStrategy());
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+// Middleware pour rendre les variables locales disponibles dans toutes les vues
+app.use((req, res, next) => {
+res.locals.flashMessages = req.flash();
+res.locals.loggedIn = req.isAuthenticated();
+res.locals.currentUser = req.user;
+
+
+next();
+});
 
 app.use(methodOverride("_method", {
   methods: ["POST", "GET"]
@@ -115,6 +161,22 @@ app.get("/courses/:id", coursesController.show, coursesController.showView);
 app.get("/courses/:id/edit", coursesController.edit);
 app.put("/courses/:id/update", coursesController.update, coursesController.redirectView);
 app.delete("/courses/:id/delete", coursesController.delete, coursesController.redirectView);
+
+
+// Authentification
+app.get("/login", authController.login);
+app.post("/login", authController.authenticate);
+app.get("/logout", authController.logout, usersController.redirectView);
+app.get("/signup", authController.signup);
+app.post("/signup", authController.register, usersController.redirectView);
+
+// Routes protégées
+app.get("/users", authController.ensureLoggedIn, usersController.index, usersController.indexView);
+app.get("/users/new", authController.ensureLoggedIn, usersController.new);
+app.get("/users/:id/edit", authController.ensureLoggedIn, usersController.edit);
+
+app.get("/courses/new", authController.ensureLoggedIn, coursesController.new);
+app.get("/courses/:id/edit", authController.ensureLoggedIn, coursesController.edit);
 
 // Gestion des erreurs
 app.use(errorController.pageNotFoundError);
