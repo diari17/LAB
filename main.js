@@ -6,6 +6,9 @@ const mongoose = require("mongoose"); // Ajout de Mongoose
 const methodOverride = require("method-override");
 const passport = require("passport");
 const cookieParser = require("cookie-parser");
+const httpStatus = require("http-status-codes");
+const routes = require("./routes/index");
+
 
 
 const layouts = require("express-ejs-layouts");
@@ -37,6 +40,7 @@ mongoose.connect(
 app.set("port", process.env.PORT || 3000);
 // Configuration d'EJS comme moteur de template
 app.set("view engine", "ejs");
+app.use(express.static("public"));
 app.use(layouts);
 // Middleware pour traiter les données des formulaires
 app.use(
@@ -90,8 +94,6 @@ app.use((req, res, next) => {
 res.locals.flashMessages = req.flash();
 res.locals.loggedIn = req.isAuthenticated();
 res.locals.currentUser = req.user;
-
-
 next();
 });
 
@@ -129,58 +131,59 @@ app.use((req, res, next) => {
 });
 
 // Définir les routes
-app.get("/", homeController.index);
-app.get("/about", homeController.about);
-// app.get("/courses", homeController.courses);
-app.get("/contact", homeController.contact);
-app.post("/contact", homeController.processContact);
-app.get("/faq", homeController.faq);
+app.use("/", routes);
+// app.get("/", homeController.index);
+// app.get("/about", homeController.about);
+// // app.get("/courses", homeController.courses);
+// app.get("/contact", homeController.contact);
+// app.post("/contact", homeController.processContact);
+// app.get("/faq", homeController.faq);
 
-// Routes pour les abonnés
-app.get("/subscribers", subscribersController.getAllSubscribers);
-app.get("/subscribers/new", subscribersController.getSubscriptionPage);
-app.post("/subscribers/create", subscribersController.saveSubscriber);
-app.get("/subscribers/:id", subscribersController.show);
-app.get("/subscribers/:id/edit", subscribersController.getEditPage); // EDit
-app.put("/subscribers/:id", subscribersController.updateSubscriber); //Update
-app.post("/subscribers/:id/delete", subscribersController.deleteSubscriber); //Supp abonnés
+// // Routes pour les abonnés
+// app.get("/subscribers", subscribersController.getAllSubscribers);
+// app.get("/subscribers/new", subscribersController.getSubscriptionPage);
+// app.post("/subscribers/create", subscribersController.saveSubscriber);
+// app.get("/subscribers/:id", subscribersController.show);
+// app.get("/subscribers/:id/edit", subscribersController.getEditPage); // EDit
+// app.put("/subscribers/:id", subscribersController.updateSubscriber); //Update
+// app.post("/subscribers/:id/delete", subscribersController.deleteSubscriber); //Supp abonnés
 
-// Routes pour les utilisateurs
-app.get("/users", usersController.index, usersController.indexView);
-app.get("/users/new", usersController.new);
-app.post("/users/create", usersController.create, usersController.redirectView);
-app.get("/users/:id", usersController.show, usersController.showView);
-app.get("/users/:id/edit", usersController.edit);
-app.put("/users/:id/update", usersController.update, usersController.redirectView);
-app.delete("/users/:id/delete", usersController.delete, usersController.redirectView);
-// Routes pour les cours
-app.get("/courses", coursesController.index, coursesController.indexView);
-app.get("/courses/new", coursesController.new);
-app.post("/courses/create", coursesController.create, coursesController.redirectView);
-app.get("/courses/:id", coursesController.show, coursesController.showView);
-app.get("/courses/:id/edit", coursesController.edit);
-app.put("/courses/:id/update", coursesController.update, coursesController.redirectView);
-app.delete("/courses/:id/delete", coursesController.delete, coursesController.redirectView);
+// // Routes pour les utilisateurs
+// app.get("/users", usersController.index, usersController.indexView);
+// app.get("/users/new", usersController.new);
+// app.post("/users/create", usersController.create, usersController.redirectView);
+// app.get("/users/:id", usersController.show, usersController.showView);
+// app.get("/users/:id/edit", usersController.edit);
+// app.put("/users/:id/update", usersController.update, usersController.redirectView);
+// app.delete("/users/:id/delete", usersController.delete, usersController.redirectView);
+// // Routes pour les cours
+// app.get("/courses", coursesController.index, coursesController.indexView);
+// app.get("/courses/new", coursesController.new);
+// app.post("/courses/create", coursesController.create, coursesController.redirectView);
+// app.get("/courses/:id", coursesController.show, coursesController.showView);
+// app.get("/courses/:id/edit", coursesController.edit);
+// app.put("/courses/:id/update", coursesController.update, coursesController.redirectView);
+// app.delete("/courses/:id/delete", coursesController.delete, coursesController.redirectView);
 
 
-// Authentification
-app.get("/login", authController.login);
-app.post("/login", authController.authenticate);
-app.get("/logout", authController.logout, usersController.redirectView);
-app.get("/signup", authController.signup);
-app.post("/signup", authController.register, usersController.redirectView);
+// // Authentification
+// app.get("/login", authController.login);
+// app.post("/login", authController.authenticate);
+// app.get("/logout", authController.logout, usersController.redirectView);
+// app.get("/signup", authController.signup);
+// app.post("/signup", authController.register, usersController.redirectView);
 
-// Routes protégées
-app.get("/users", authController.ensureLoggedIn, usersController.index, usersController.indexView);
-app.get("/users/new", authController.ensureLoggedIn, usersController.new);
-app.get("/users/:id/edit", authController.ensureLoggedIn, usersController.edit);
+// // Routes protégées
+// app.get("/users", authController.ensureLoggedIn, usersController.index, usersController.indexView);
+// app.get("/users/new", authController.ensureLoggedIn, usersController.new);
+// app.get("/users/:id/edit", authController.ensureLoggedIn, usersController.edit);
 
-app.get("/courses/new", authController.ensureLoggedIn, coursesController.new);
-app.get("/courses/:id/edit", authController.ensureLoggedIn, coursesController.edit);
+// app.get("/courses/new", authController.ensureLoggedIn, coursesController.new);
+// app.get("/courses/:id/edit", authController.ensureLoggedIn, coursesController.edit);
 
-// Gestion des erreurs
-app.use(errorController.pageNotFoundError);
-app.use(errorController.internalServerError);
+// // Gestion des erreurs
+// app.use(errorController.pageNotFoundError);
+// app.use(errorController.internalServerError);
 
 // Démarrer le serveur
 app.listen(app.get("port"), () => {
